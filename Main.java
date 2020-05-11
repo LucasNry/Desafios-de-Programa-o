@@ -1,84 +1,130 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-
-import utils.DesafiosDebugger;
-
-import java.util.Map;
 
 // Lucas Domingues Assumpção Nery - 11315040
 // Daniel Macris - 11271035
 
 public class Main {
-
     public static List<String> outputList = new ArrayList<>();
-    public static void main(String[] args) throws IOException {
-        Scanner input = new Scanner(
-            new FileReader(
-                String.format("%s/assets/%s", new File("").getAbsolutePath(), "inputFile.txt")
-            )
-        );
+
+    public static DesafiosDebugger debugger;
+
+    public static Scanner input;
+    public static void main(String[] args) throws IOException, FileNotFoundException {
+        initializeEntities();
         
         while(input.hasNextLine()) {
             String line = input.nextLine();
             
-            if(!line.contains(".")) {
-                abbreviateAndPrint(line);
-            } else {
-                break;
+            if(checkEndOfTestCase(line)) {
+                //Code to be executed
             }
         }
 
-        DesafiosDebugger debugger = new DesafiosDebugger("outputFile.txt", outputList);
-        debugger.assertResults();
+        if(debugger == null) printResults(outputList);
+        else debugger.assertResults(outputList);
+
         input.close();
     }
 
-    public static void abbreviateAndPrint(String testCase) {
-        String newSentence = testCase;
-        List<String> words = new ArrayList<>(Arrays.asList(testCase.split(" ")));
-        Map<String, String> abbreviatedWords = abbreviateIfPossible(words);
-        
-        for(String key : abbreviatedWords.keySet()) {
-            newSentence = newSentence.replace(abbreviatedWords.get(key), key);
-        }
+//----------------------------------------------------------------------------------------
+// Helper Functions
+//----------------------------------------------------------------------------------------
 
-        List<String> orderedAbbreviatedWords = new ArrayList<>(abbreviatedWords.keySet());
-        Collections.sort(orderedAbbreviatedWords);
+    
 
-        System.out.println(newSentence);
-        outputList.add(newSentence);
-        System.out.println(abbreviatedWords.keySet().size());
-        outputList.add(Integer.toString(abbreviatedWords.keySet().size()));
-        for(String word : orderedAbbreviatedWords) {
-            String abbreviationCorrespondence = String.format("%s = %s", word, abbreviatedWords.get(word));
-            System.out.println(abbreviationCorrespondence);
-            outputList.add(abbreviationCorrespondence);
+//----------------------------------------------------------------------------------------
+// The definitions below are to be used regardless of the exercise proposed, DO NOT DELETE
+//----------------------------------------------------------------------------------------
+
+    public static boolean checkEndOfTestCase(String line) {
+        return true; // Insert condition that defines the end of a test case
+    }
+
+    public static void printResults(List<String> outputList) {
+        for (String line : outputList) {
+            System.out.println(line);
         }
     }
 
-    public static Map<String, String> abbreviateIfPossible(List<String> words) {
-        Map<String, String> returnMap = new HashMap<>();
-        for(String word : words) {
-            if(word.length() > 2) {
-                String abbreviation = abbreviate(word);
-                if(
-                    returnMap.get(abbreviation) == null ||
-                    word.length() >= returnMap.get(abbreviation).length()
-                ) returnMap.put(abbreviation, word);
+    public static void initializeEntities() throws FileNotFoundException {
+        try {
+            debugger = new DesafiosDebugger("outputFile.txt"); 
+        } catch (FileNotFoundException e) {
+            debugger = null;
+        } finally {
+            if(debugger == null) {
+                input = new Scanner(System.in);
+            } else {
+                input = new Scanner(
+                    new FileReader(
+                        String.format("%s/assets/%s", new File("").getAbsolutePath(), "inputFile.txt")
+                    )
+                );
             }
         }
-
-        return returnMap;
     }
 
-    public static String abbreviate(String word) {
-        return String.format("%s.", word.split("")[0]);
+    private static class DesafiosDebugger {
+        public static final String ANSI_BLUE = "\u001B[34m";
+        public static final String ANSI_RED = "\u001B[31m";
+        public static final String ANSI_GREEN = "\u001B[32m";
+        public static final String ANSI_YELLOW = "\u001B[33m";
+    
+        private String outputFileName;
+        private Scanner outputScanner;
+        
+        public DesafiosDebugger(String outputFileName) throws FileNotFoundException {
+            this.outputFileName = outputFileName;
+            this.outputScanner = new Scanner(
+                new FileReader(
+                    String.format("%s/assets/%s", new File("").getAbsolutePath(), this.outputFileName)
+                )
+            );
+        }
+    
+        public void assertResults( List<String> outputList) {
+            System.out.println("\n");
+            System.out.println(ANSI_BLUE + "Your Results are:\n");
+            int correctLines = 0;
+            int incorrectLines = 0;
+    
+            int counter = 0;
+            while(outputScanner.hasNextLine()) {
+                String line = outputScanner.nextLine();
+    
+                if(line.equals(outputList.get(counter))) {
+                    System.out.printf("%sLine %s is correct\n", ANSI_GREEN, counter + 1);
+                    correctLines++;
+                }
+                if(!line.equals(outputList.get(counter))) {
+                    System.out.printf("%sLine %s is incorrect\n", ANSI_RED, counter + 1);
+                    String errorOutlinedLine = findErrors(line, outputList.get(counter));
+                    System.out.printf("%s%s %s!= %s%s\n", ANSI_YELLOW, errorOutlinedLine, ANSI_RED, ANSI_GREEN, line);
+                    incorrectLines++;
+                }
+                counter++;
+            }
+    
+            System.out.println("");
+            System.out.println(ANSI_BLUE + "Summary:\n");
+            System.out.println(String.format("%sCorrect Lines: %s", ANSI_GREEN, correctLines));
+            System.out.println(String.format("%sCorrect Lines: %s", ANSI_RED, incorrectLines));
+            System.out.println(String.format("%sError percentage: %.2f%%", ANSI_RED, ((float) incorrectLines / (float) correctLines) * 100));
+        }
+    
+        private String findErrors(String base, String incorrect) {
+            String returnString = incorrect;
+            for(String word : incorrect.split(" ")) {
+                if(!base.contains(word)) returnString = returnString.replace(word, (ANSI_RED + word + ANSI_YELLOW));
+            }
+    
+            return returnString;
+        }
     }
 }

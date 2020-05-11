@@ -14,12 +14,10 @@ public class DesafiosDebugger {
     public static final String ANSI_YELLOW = "\u001B[33m";
 
     private String outputFileName;
-    private List<String> outputList;
     private Scanner outputScanner;
     
-    public DesafiosDebugger(String outputFileName, List<String> outputList) throws FileNotFoundException {
+    public DesafiosDebugger(String outputFileName) throws FileNotFoundException {
         this.outputFileName = outputFileName;
-        this.outputList = outputList;
         this.outputScanner = new Scanner(
             new FileReader(
                 String.format("%s/assets/%s", new File("").getAbsolutePath(), this.outputFileName)
@@ -27,7 +25,7 @@ public class DesafiosDebugger {
         );
     }
 
-    public void assertResults() {
+    public void assertResults( List<String> outputList) {
         System.out.println("\n");
         System.out.println(ANSI_BLUE + "Your Results are:\n");
         int correctLines = 0;
